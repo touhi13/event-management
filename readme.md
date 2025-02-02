@@ -24,17 +24,20 @@ A PHP-based event management system with user authentication, event creation, an
 ## Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/touhi13/event-management.git
 cd event-management
 ```
 
 2. Install dependencies
+
 ```bash
 composer install
 ```
 
 3. Create database and import schema
+
 ```sql
 CREATE DATABASE event_management;
 USE event_management;
@@ -82,7 +85,8 @@ INSERT INTO users (username, email, password, is_admin) VALUES
 ```
 
 4. Configure your database
-Create `config/database.php`:
+   Create `config/database.php`:
+
 ```php
 <?php
 return [
@@ -100,10 +104,11 @@ return [
 ```
 
 5. Configure Apache
-Create `.htaccess` in your project root:
+   Create `.htaccess` in your project root:
+
 ```apache
 RewriteEngine On
-RewriteBase /event-management/
+RewriteBase /
 
 # Redirect all requests to public directory
 RewriteCond %{THE_REQUEST} /public/([^\s?]) [NC]
@@ -131,12 +136,14 @@ Options -Indexes
 ```
 
 6. Set permissions
+
 ```bash
 chmod -R 755 .
 chmod -R 777 storage/logs
 ```
 
 7. Create required directories
+
 ```bash
 mkdir -p public/assets/css
 mkdir -p public/assets/js
@@ -144,6 +151,7 @@ mkdir -p storage/logs
 ```
 
 ## Project Structure
+
 ```plaintext
 event-management/
 ├── config/
@@ -193,6 +201,7 @@ event-management/
 1. Access the application
 
 2. Default admin credentials:
+
    - Email: admin@example.com
    - Password: password
 
@@ -213,4 +222,3 @@ event-management/
 - Secure session handling
 - Protected sensitive routes
 - File access restrictions
-
