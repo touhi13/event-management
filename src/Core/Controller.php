@@ -5,13 +5,23 @@ abstract class Controller
 {
     protected function render(string $template, array $data = []): void
     {
+        // Always get the authenticated user
+        $auth = Auth::getInstance();
+        $user = $auth->getUser();
+
+        // Merge user data with other view data
+        $data = array_merge(['user' => $user], $data);
+
+        // Extract data to make variables available in template
         extract($data);
+
+        // Include the template
         require_once __DIR__ . "/../../templates/$template.php";
     }
 
-    protected function redirect(string $url): void
+    protected function redirect(string $path): void
     {
-        header("Location: $url");
+        header("Location: " . BASE_PATH . $path);
         exit;
     }
 
@@ -26,27 +36,23 @@ abstract class Controller
     protected function validateRequest(array $data, array $rules): array
     {
         $errors = [];
-
-        foreach ($rules as $field => $rule) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                $errors[$field] = "The $field field is required";
-                continue;
-            }
-
-            if (strpos($rule, 'email') !== false) {
-                if (!filter_var($data[$field], FILTER_VALIDATE_EMAIL)) {
-                    $errors[$field] = "Invalid email format";
+        foreach ($rules as $field => $fieldRules) {
+            $fieldRules = explode('|', $fieldRules);
+            foreach ($fieldRules as $rule) {
+                if ($rule === 'required' && empty($data[$field])) {
+                    $errors[$field] = ucfirst($field) . ' is required';
                 }
-            }
-
-            if (preg_match('/min:(\d+)/', $rule, $matches)) {
-                $min = (int) $matches[1];
-                if (strlen($data[$field]) < $min) {
-                    $errors[$field] = "The $field must be at least $min characters";
+                if (strpos($rule, 'min:') === 0) {
+                    $min = substr($rule, 4);
+                    if (strlen($data[$field]) < $min) {
+                        $errors[$field] = ucfirst($field) . ' must be at least ' . $min . ' characters';
+                    }
+                }
+                if ($rule === 'email' && !filter_var($data[$field], FILTER_VALIDATE_EMAIL)) {
+                    $errors[$field] = 'Invalid email format';
                 }
             }
         }
-
         return $errors;
     }
 }

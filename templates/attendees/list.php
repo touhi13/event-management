@@ -2,9 +2,9 @@
 
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="h4 mb-0">Attendees for <?=htmlspecialchars($event['name'])?></h2>
+        <h2 class="h4 mb-0"><i class="bi bi-people me-2"></i>Attendees for <?=htmlspecialchars($event['name'])?></h2>
         <a href="/events/attendees/export?id=<?=$event['id']?>" class="btn btn-success">
-            <i class="bi bi-download"></i> Export to CSV
+            <i class="bi bi-download me-2"></i>Export to CSV
         </a>
     </div>
     <div class="card-body">
@@ -32,7 +32,9 @@
         </div>
     </div>
     <div class="card-footer">
-        <a href="/events" class="btn btn-secondary">Back to Events</a>
+        <a href="/events" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Events
+        </a>
     </div>
 </div>
 

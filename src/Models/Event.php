@@ -43,4 +43,17 @@ class Event extends Model
         $result = $stmt->fetch();
         return $result && $result['current_attendees'] < $result['max_capacity'];
     }
+
+    public function getAttendeeCount(int $eventId): int
+    {
+        $stmt = $this->executeQuery(
+            "SELECT COUNT(*) as count
+            FROM attendees
+            WHERE event_id = ?",
+            [$eventId]
+        );
+
+        $result = $stmt->fetch();
+        return (int) $result['count'];
+    }
 }

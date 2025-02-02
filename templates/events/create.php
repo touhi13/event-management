@@ -4,7 +4,7 @@
     <div class="col-md-8 col-lg-6">
         <div class="card shadow">
             <div class="card-header">
-                <h2 class="h4 mb-0">Create New Event</h2>
+                <h2 class="h4 mb-0"><i class="bi bi-calendar-plus me-2"></i>Create New Event</h2>
             </div>
             <div class="card-body">
                 <?php if (isset($errors)): ?>
@@ -42,8 +42,12 @@
                             value="<?=htmlspecialchars($_POST['max_capacity'] ?? '')?>" required>
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Create Event</button>
-                        <a href="/events" class="btn btn-secondary">Back to Events</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Create Event
+                        </button>
+                        <a href="/events" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Events
+                        </a>
                     </div>
                 </form>
             </div>

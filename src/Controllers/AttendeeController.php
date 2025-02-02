@@ -19,10 +19,14 @@ class AttendeeController extends Controller
         $this->auth          = Auth::getInstance();
     }
 
-    public function register(int $eventId): void
+    public function register(): void
     {
-        $event = $this->eventModel->findById($eventId);
+        $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
 
+        $event = $this->eventModel->findById($eventId);
         if (!$event) {
             $this->redirect('/events');
         }
@@ -57,13 +61,19 @@ class AttendeeController extends Controller
                 'event'  => $event,
                 'errors' => $errors,
             ]);
+            return;
         }
 
         $this->render('attendees/register', ['event' => $event]);
     }
 
-    public function exportAttendees(int $eventId): void
+    public function exportAttendees(): void
     {
+        $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
+
         // Check if user is admin or event organizer
         if (!$this->auth->isAdmin()) {
             $event = $this->eventModel->findById($eventId);
@@ -80,8 +90,13 @@ class AttendeeController extends Controller
         exit;
     }
 
-    public function list(int $eventId): void
+    public function list(): void
     {
+        $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
+
         // Check if user is admin or event organizer
         if (!$this->auth->isAdmin()) {
             $event = $this->eventModel->findById($eventId);
@@ -96,6 +111,8 @@ class AttendeeController extends Controller
         $this->render('attendees/list', [
             'attendees' => $attendees,
             'event'     => $event,
+            'isAdmin'   => $this->auth->isAdmin(),
+            'userId'    => $this->auth->getUserId(),
         ]);
     }
 }

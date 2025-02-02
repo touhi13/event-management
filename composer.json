@@ -1,5 +1,5 @@
 {
-    "name": "your-name/event-management",
+    "name": "event-management",
     "description": "Event Management System",
     "type": "project",
     "autoload": {

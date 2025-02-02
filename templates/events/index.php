@@ -2,8 +2,10 @@
 
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="h4 mb-0">Events</h2>
-        <a href="/events/create" class="btn btn-primary">Create New Event</a>
+        <h2 class="h4 mb-0"><i class="bi bi-calendar-event me-2"></i>Events</h2>
+        <a href="/events/create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Create New Event
+        </a>
     </div>
     <div class="card-body">
         <?php if (empty($events)): ?>
@@ -29,11 +31,19 @@
                         <td><?=htmlspecialchars($event['max_capacity'])?></td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="/events/view?id=<?=$event['id']?>" class="btn btn-info">View</a>
-                                <a href="/events/edit?id=<?=$event['id']?>" class="btn btn-warning">Edit</a>
-                                <a href="/events/register?id=<?=$event['id']?>" class="btn btn-success">Register</a>
+                                <a href="/events/view?id=<?=$event['id']?>" class="btn btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="/events/edit?id=<?=$event['id']?>" class="btn btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="/events/register?id=<?=$event['id']?>" class="btn btn-success">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
                                 <?php if ($isAdmin || $event['user_id'] === $userId): ?>
-                                <a href="/events/attendees?id=<?=$event['id']?>" class="btn btn-secondary">Attendees</a>
+                                <a href="/events/attendees?id=<?=$event['id']?>" class="btn btn-secondary">
+                                    <i class="bi bi-people"></i>
+                                </a>
                                 <?php endif; ?>
                             </div>
                         </td>

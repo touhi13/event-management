@@ -4,7 +4,8 @@
     <div class="col-md-8 col-lg-6">
         <div class="card shadow">
             <div class="card-header">
-                <h2 class="h4 mb-0">Register for <?=htmlspecialchars($event['name'])?></h2>
+                <h2 class="h4 mb-0"><i class="bi bi-person-plus me-2"></i>Register for
+                    <?=htmlspecialchars($event['name'])?></h2>
             </div>
             <div class="card-body">
                 <?php if (isset($errors)): ?>
@@ -32,8 +33,12 @@
                             value="<?=htmlspecialchars($_POST['phone'] ?? '')?>" required>
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Register</button>
-                        <a href="/events" class="btn btn-secondary">Back to Events</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Register
+                        </button>
+                        <a href="/events" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Events
+                        </a>
                     </div>
                 </form>
             </div>

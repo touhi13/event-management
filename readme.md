@@ -25,7 +25,7 @@ A PHP-based event management system with user authentication, event creation, an
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/event-management.git
+git clone https://github.com/touhi13/event-management.git
 cd event-management
 ```
 
