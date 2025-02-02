@@ -1,19 +1,19 @@
 <?php return array(
     'root' => array(
-        'name' => 'event-management',
+        'name' => 'vendor/event-management',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '9e1c7fefd8f26b40d7176b5a00b57e7a5d214f69',
+        'reference' => '1e03b1ded110fd33e38ed9624a1caa2b8518c820',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        'event-management' => array(
+        'vendor/event-management' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '9e1c7fefd8f26b40d7176b5a00b57e7a5d214f69',
+            'reference' => '1e03b1ded110fd33e38ed9624a1caa2b8518c820',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
