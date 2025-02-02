@@ -150,5 +150,3 @@ if (isset($routes[$method][$path])) {
     header("HTTP/1.0 404 Not Found");
     require_once __DIR__ . '/../templates/errors/404.php';
 }
-
-//g5SrdZQpvD,(
