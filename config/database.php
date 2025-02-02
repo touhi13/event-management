@@ -2,9 +2,9 @@
 
 return [
     'host'     => 'localhost',
-    'database' => 'event_management',
-    'username' => 'root',
-    'password' => '',
+    'database' => 'kuwaithouseclean_event_management',
+    'username' => 'kuwaithouseclean_event',
+    'password' => 'g5SrdZQpvD,(',
     'charset'  => 'utf8mb4',
     'options'  => [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
