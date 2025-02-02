@@ -103,53 +103,6 @@ return [
 ];
 ```
 
-5. Configure Apache
-   Create `.htaccess` in your project root:
-
-```apache
-RewriteEngine On
-RewriteBase /
-
-# Redirect all requests to public directory
-RewriteCond %{THE_REQUEST} /public/([^\s?]) [NC]
-RewriteRule ^ %1 [L,NE,R=302]
-RewriteRule ^((?!public/).)$ public/$1 [L,NC]
-
-# Prevent directory listing
-Options -Indexes
-
-# Deny access to sensitive files
-<FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-<FilesMatch "(composer\.json|composer\.lock|package\.json|package-lock\.json|\.gitignore)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect sensitive directories
-<IfModule mod_rewrite.c>
-    RewriteRule ^(config|src|templates|vendor) - [F,L]
-</IfModule>
-```
-
-6. Set permissions
-
-```bash
-chmod -R 755 .
-chmod -R 777 storage/logs
-```
-
-7. Create required directories
-
-```bash
-mkdir -p public/assets/css
-mkdir -p public/assets/js
-mkdir -p storage/logs
-```
-
 ## Project Structure
 
 ```plaintext
