@@ -24,7 +24,6 @@ class User extends Model
 
     public function create(array $data): bool
     {
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         return parent::create($data);
     }
 

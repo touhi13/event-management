@@ -25,10 +25,10 @@ class AuthController extends Controller
             ]);
 
             if (empty($errors)) {
-                $user = $this->userModel->findByEmail($_POST['email']);
+                // Debug line (remove in production)
+                error_log("Login attempt with email: " . $_POST['email']);
 
-                if ($user && $this->userModel->verifyPassword($_POST['password'], $user['password'])) {
-                    $this->auth->login($user);
+                if ($this->auth->attempt($_POST['email'], $_POST['password'])) {
                     $this->redirect('/dashboard');
                 } else {
                     $errors['auth'] = 'Invalid email or password';
@@ -36,6 +36,7 @@ class AuthController extends Controller
             }
 
             $this->render('auth/login', ['errors' => $errors]);
+            return;
         }
 
         $this->render('auth/login');
@@ -55,7 +56,13 @@ class AuthController extends Controller
                 if ($this->userModel->findByEmail($_POST['email'])) {
                     $errors['email'] = 'Email already exists';
                 } else {
-                    if ($this->userModel->create($_POST)) {
+                    // Hash password before saving
+                    $userData             = $_POST;
+                    $userData['password'] = $this->auth->hashPassword($_POST['password']);
+
+                    if ($this->userModel->create($userData)) {
+                        // Debug line (remove in production)
+                        error_log("User registered successfully with email: " . $userData['email']);
                         $this->redirect('/login');
                     } else {
                         $errors['general'] = 'Registration failed';
@@ -64,6 +71,7 @@ class AuthController extends Controller
             }
 
             $this->render('auth/register', ['errors' => $errors]);
+            return;
         }
 
         $this->render('auth/register');

@@ -75,6 +75,10 @@ $routes = [
             'action'     => 'exportAttendees',
             'middleware' => [Middleware\AuthMiddleware::class],
         ],
+        '/api/events'              => [
+            'controller' => Controllers\EventController::class,
+            'action'     => 'api',
+        ],
     ],
     'POST' => [
         '/login'           => [
@@ -105,6 +109,16 @@ $routes = [
         '/events/register' => [
             'controller' => Controllers\AttendeeController::class,
             'action'     => 'register',
+            'middleware' => [Middleware\AuthMiddleware::class],
+        ],
+        '/events/store'    => [
+            'controller' => Controllers\EventController::class,
+            'action'     => 'store',
+            'middleware' => [Middleware\AuthMiddleware::class],
+        ],
+        '/events/update'   => [
+            'controller' => Controllers\EventController::class,
+            'action'     => 'update',
             'middleware' => [Middleware\AuthMiddleware::class],
         ],
     ],

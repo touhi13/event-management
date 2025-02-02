@@ -18,14 +18,48 @@ class EventController extends Controller
 
     public function index(): void
     {
-        $events  = $this->eventModel->findAll();
-        $userId  = $this->auth->getUserId();
-        $isAdmin = $this->auth->isAdmin();
+        $page    = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $perPage = 10;
+
+        // Get filter and sort parameters
+        $filters = [
+            'search'    => $_GET['search'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to'   => $_GET['date_to'] ?? '',
+            'location'  => $_GET['location'] ?? '',
+        ];
+
+        // Default sort is by created_at DESC
+        $sortBy    = $_GET['sort'] ?? 'created_at';
+        $sortOrder = $_GET['order'] ?? 'DESC';
+
+        // Get filtered and sorted events with pagination
+        $result = $this->eventModel->getFilteredAndSorted(
+            $filters,
+            $sortBy,
+            $sortOrder,
+            $perPage,
+            ($page - 1) * $perPage
+        );
+
+        // Get total count for pagination
+        $total      = $this->eventModel->countFiltered($filters);
+        $totalPages = ceil($total / $perPage);
+
+        // Get locations for filter dropdown
+        $locations = $this->eventModel->getLocations();
 
         $this->render('events/index', [
-            'events'  => $events,
-            'userId'  => $userId,
-            'isAdmin' => $isAdmin,
+            'events'      => $result,
+            'currentPage' => $page,
+            'totalPages'  => $totalPages,
+            'filters'     => $filters,
+            'sortBy'      => $sortBy,
+            'sortOrder'   => $sortOrder,
+            'locations'   => $locations,
+            'isAdmin'     => $this->auth->isAdmin(),
+            'userId'      => $this->auth->getUserId(),
+            'title'       => 'Events',
         ]);
     }
 
@@ -36,32 +70,54 @@ class EventController extends Controller
 
     public function store(): void
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/events');
+        }
+
         $errors = $this->validateRequest($_POST, [
-            'name'         => 'required|min:3',
-            'event_date'   => 'required',
-            'max_capacity' => 'required',
-            'location'     => 'required',
+            'name'         => 'required|min:3|max:100',
+            'description'  => 'required|min:10|max:1000',
+            'event_date'   => 'required|date|future_date',
+            'location'     => 'required|min:3|max:255',
+            'max_capacity' => 'required|integer|positive',
         ]);
 
         if (empty($errors)) {
-            $eventData = array_merge($_POST, [
-                'user_id' => $this->auth->getUserId(),
-            ]);
+            $eventData            = $_POST;
+            $eventData['user_id'] = $this->auth->getUserId();
 
-            if ($this->eventModel->create($eventData)) {
+            // Additional server-side validation
+            if (strtotime($eventData['event_date']) < time()) {
+                $errors['event_date'] = 'Event date must be in the future';
+            }
+
+            if ((int) $eventData['max_capacity'] > 1000) {
+                $errors['max_capacity'] = 'Maximum capacity cannot exceed 1000';
+            }
+
+            if (empty($errors) && $this->eventModel->create($eventData)) {
                 $this->redirect('/events');
+            } else {
+                $errors['general'] = 'Failed to create event';
             }
         }
 
-        $this->render('events/create', ['errors' => $errors]);
+        // If we get here, there were validation errors
+        $this->render('events/create', [
+            'errors' => $errors,
+            'event'  => $_POST,
+        ]);
     }
 
     public function edit(): void
     {
-        $id    = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        $event = $this->eventModel->findById($id);
+        $eventId = $_GET['id'] ?? null;
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
 
-        if (!$event) {
+        $event = $this->eventModel->findById($eventId);
+        if (!$event || ($event['user_id'] !== $this->auth->getUserId() && !$this->auth->isAdmin())) {
             $this->redirect('/events');
         }
 
@@ -70,81 +126,199 @@ class EventController extends Controller
 
     public function update(): void
     {
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if (!$id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/events');
         }
 
-        // Check if event exists and user has permission
-        $event = $this->eventModel->findById($id);
+        $eventId = $_POST['id'] ?? null;
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
+
+        $event = $this->eventModel->findById($eventId);
         if (!$event || ($event['user_id'] !== $this->auth->getUserId() && !$this->auth->isAdmin())) {
             $this->redirect('/events');
         }
 
         $errors = $this->validateRequest($_POST, [
-            'name'         => 'required|min:3',
-            'event_date'   => 'required',
-            'max_capacity' => 'required',
-            'location'     => 'required',
+            'name'         => 'required|min:3|max:100',
+            'description'  => 'required|min:10|max:1000',
+            'event_date'   => 'required|date|future_date',
+            'location'     => 'required|min:3|max:255',
+            'max_capacity' => 'required|integer|positive',
         ]);
 
         if (empty($errors)) {
-            // Prepare event data
-            $eventData = [
-                'name'         => $_POST['name'],
-                'description'  => $_POST['description'],
-                'event_date'   => $_POST['event_date'],
-                'location'     => $_POST['location'],
-                'max_capacity' => $_POST['max_capacity'],
-                'user_id'      => $event['user_id'], // Keep original user_id
-            ];
-
-            if ($this->eventModel->update($id, $eventData)) {
+            if ($this->eventModel->update($eventId, $_POST)) {
                 $this->redirect('/events');
-                return;
+            } else {
+                $errors['general'] = 'Failed to update event';
             }
         }
 
-        // If we get here, there was an error
         $this->render('events/edit', [
-            'event'  => array_merge($event, $_POST), // Preserve submitted data
+            'event'  => array_merge($event, $_POST),
             'errors' => $errors,
         ]);
     }
 
     public function delete(): void
     {
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if ($id && $this->eventModel->delete($id)) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/events');
         }
-        $this->redirect('/events');
+
+        $eventId = $_POST['id'] ?? null;
+        if (!$eventId) {
+            $this->redirect('/events');
+        }
+
+        $event = $this->eventModel->findById($eventId);
+        if (!$event || ($event['user_id'] !== $this->auth->getUserId() && !$this->auth->isAdmin())) {
+            $this->redirect('/events');
+        }
+
+        if ($this->eventModel->delete($eventId)) {
+            // Success message could be added here
+            $this->redirect('/events');
+        } else {
+            // Error message could be added here
+            $this->redirect('/events');
+        }
     }
 
     public function view(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        if (!$id) {
+        $eventId = $_GET['id'] ?? null;
+        if (!$eventId) {
             $this->redirect('/events');
         }
 
-        $event = $this->eventModel->findById($id);
+        $event = $this->eventModel->findById($eventId);
         if (!$event) {
             $this->redirect('/events');
         }
 
-        // Get attendee count
-        $attendeeCount = $this->eventModel->getAttendeeCount($id);
-
-        // Get user info
-        $userId  = $this->auth->getUserId();
-        $isAdmin = $this->auth->isAdmin();
+        // Get attendee count for the event
+        $attendeeCount = $this->eventModel->getAttendeeCount($eventId);
 
         $this->render('events/view', [
             'event'         => $event,
             'attendeeCount' => $attendeeCount,
-            'userId'        => $userId,
-            'isAdmin'       => $isAdmin,
+            'isAdmin'       => $this->auth->isAdmin(),
+            'userId'        => $this->auth->getUserId(),
+            'hasCapacity'   => $this->eventModel->hasCapacity($eventId),
+            'title'         => 'View Event',
         ]);
+    }
+
+    public function api(): void
+    {
+        // Check for API authentication (you might want to use API keys or tokens)
+        $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
+        if (!$apiKey || !$this->validateApiKey($apiKey)) {
+            $this->json(['error' => 'Invalid or missing API key'], 401);
+        }
+
+        $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+        // Handle different HTTP methods
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'GET':
+                if ($eventId) {
+                    $this->getEventDetails($eventId);
+                } else {
+                    $this->getEventsList();
+                }
+                break;
+
+            default:
+                $this->json(['error' => 'Method not allowed'], 405);
+        }
+    }
+
+    private function getEventDetails(int $eventId): void
+    {
+        $event = $this->eventModel->findById($eventId);
+
+        if (!$event) {
+            $this->json(['error' => 'Event not found'], 404);
+        }
+
+        // Get additional event information
+        $attendeeCount = $this->eventModel->getAttendeeCount($eventId);
+        $hasCapacity   = $this->eventModel->hasCapacity($eventId);
+
+        // Format the response
+        $response = [
+            'id'                => $event['id'],
+            'name'              => $event['name'],
+            'description'       => $event['description'],
+            'event_date'        => $event['event_date'],
+            'location'          => $event['location'],
+            'max_capacity'      => $event['max_capacity'],
+            'current_attendees' => $attendeeCount,
+            'has_capacity'      => $hasCapacity,
+            'created_at'        => $event['created_at'],
+            'updated_at'        => $event['updated_at'],
+        ];
+
+        $this->json($response);
+    }
+
+    private function getEventsList(): void
+    {
+        // Get query parameters
+        $page    = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
+        $perPage = filter_input(INPUT_GET, 'per_page', FILTER_VALIDATE_INT) ?: 10;
+
+        // Get filter parameters
+        $filters = [
+            'search'    => $_GET['search'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to'   => $_GET['date_to'] ?? '',
+            'location'  => $_GET['location'] ?? '',
+        ];
+
+        // Get events with pagination
+        $events = $this->eventModel->getFilteredAndSorted(
+            $filters,
+            'event_date',
+            'ASC',
+            $perPage,
+            ($page - 1) * $perPage
+        );
+
+        $total = $this->eventModel->countFiltered($filters);
+
+        // Format the response
+        $response = [
+            'data' => array_map(function ($event) {
+                return [
+                    'id'           => $event['id'],
+                    'name'         => $event['name'],
+                    'description'  => $event['description'],
+                    'event_date'   => $event['event_date'],
+                    'location'     => $event['location'],
+                    'max_capacity' => $event['max_capacity'],
+                ];
+            }, $events),
+            'meta' => [
+                'current_page' => $page,
+                'per_page'     => $perPage,
+                'total'        => $total,
+                'total_pages'  => ceil($total / $perPage),
+            ],
+        ];
+
+        $this->json($response);
+    }
+
+    private function validateApiKey(string $apiKey): bool
+    {
+        // In a real application, you would validate against a database of API keys
+        // For this example, we'll use a simple environment variable
+        $validApiKey = getenv('API_KEY') ?: 'your-secret-api-key';
+        return hash_equals($validApiKey, $apiKey);
     }
 }

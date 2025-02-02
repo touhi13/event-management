@@ -23,11 +23,17 @@ class AttendeeController extends Controller
     {
         $eventId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         if (!$eventId) {
+            if ($this->isAjaxRequest()) {
+                $this->json(['error' => 'Invalid event ID'], 400);
+            }
             $this->redirect('/events');
         }
 
         $event = $this->eventModel->findById($eventId);
         if (!$event) {
+            if ($this->isAjaxRequest()) {
+                $this->json(['error' => 'Event not found'], 404);
+            }
             $this->redirect('/events');
         }
 
@@ -50,11 +56,22 @@ class AttendeeController extends Controller
                     $registrationData = array_merge($_POST, ['event_id' => $eventId]);
 
                     if ($this->attendeeModel->create($registrationData)) {
+                        if ($this->isAjaxRequest()) {
+                            $this->json([
+                                'success'  => true,
+                                'message'  => 'Registration successful!',
+                                'redirect' => "/events/view?id={$eventId}",
+                            ]);
+                        }
                         $this->redirect("/events/view?id={$eventId}");
                     } else {
                         $errors['general'] = 'Registration failed';
                     }
                 }
+            }
+
+            if ($this->isAjaxRequest()) {
+                $this->json(['errors' => $errors], 400);
             }
 
             $this->render('attendees/register', [
@@ -65,6 +82,12 @@ class AttendeeController extends Controller
         }
 
         $this->render('attendees/register', ['event' => $event]);
+    }
+
+    private function isAjaxRequest(): bool
+    {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     public function exportAttendees(): void
@@ -105,14 +128,47 @@ class AttendeeController extends Controller
             }
         }
 
-        $attendees = $this->attendeeModel->findByEventId($eventId);
-        $event     = $this->eventModel->findById($eventId);
+        // Get pagination parameters
+        $page    = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $perPage = 10;
+
+        // Get filter and sort parameters
+        $filters = [
+            'search'    => $_GET['search'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to'   => $_GET['date_to'] ?? '',
+        ];
+
+        // Default sort is by registration_date DESC
+        $sortBy    = $_GET['sort'] ?? 'registration_date';
+        $sortOrder = $_GET['order'] ?? 'DESC';
+
+        // Get filtered and sorted attendees
+        $attendees = $this->attendeeModel->getFilteredAndSorted(
+            $eventId,
+            $filters,
+            $sortBy,
+            $sortOrder,
+            $perPage,
+            ($page - 1) * $perPage
+        );
+
+        // Get total count for pagination
+        $total      = $this->attendeeModel->countFiltered($eventId, $filters);
+        $totalPages = ceil($total / $perPage);
+
+        $event = $this->eventModel->findById($eventId);
 
         $this->render('attendees/list', [
-            'attendees' => $attendees,
-            'event'     => $event,
-            'isAdmin'   => $this->auth->isAdmin(),
-            'userId'    => $this->auth->getUserId(),
+            'attendees'   => $attendees,
+            'event'       => $event,
+            'currentPage' => $page,
+            'totalPages'  => $totalPages,
+            'filters'     => $filters,
+            'sortBy'      => $sortBy,
+            'sortOrder'   => $sortOrder,
+            'isAdmin'     => $this->auth->isAdmin(),
+            'userId'      => $this->auth->getUserId(),
         ]);
     }
 }

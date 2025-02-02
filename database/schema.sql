@@ -39,3 +39,62 @@ CREATE TABLE attendees (
 INSERT INTO users (username, email, password, is_admin) VALUES 
 ('admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE);
 -- Note: The password hash above is for 'password' 
+
+-- Generate test data
+-- First, create admin user
+INSERT INTO users (username, email, password, is_admin) VALUES 
+('admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', TRUE);
+
+-- Generate 99 more users
+DELIMITER //
+CREATE PROCEDURE generate_test_data()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    
+    -- Generate Users
+    WHILE i <= 99 DO
+        INSERT INTO users (username, email, password, is_admin) VALUES
+        (CONCAT('user', i), 
+         CONCAT('user', i, '@example.com'),
+         '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+         IF(i <= 5, TRUE, FALSE));
+        SET i = i + 1;
+    END WHILE;
+
+    -- Generate Events
+    SET i = 1;
+    WHILE i <= 100 DO
+        INSERT INTO events (user_id, name, description, event_date, location, max_capacity) VALUES
+        (FLOOR(1 + RAND() * 100),
+         CONCAT('Event ', i),
+         CONCAT('Description for event ', i, '. This is a test event with detailed information.'),
+         DATE_ADD(CURRENT_DATE, INTERVAL FLOOR(RAND() * 365) DAY),
+         CASE FLOOR(1 + RAND() * 5)
+            WHEN 1 THEN 'New York Convention Center'
+            WHEN 2 THEN 'Los Angeles Exhibition Hall'
+            WHEN 3 THEN 'Chicago Conference Center'
+            WHEN 4 THEN 'Houston Event Space'
+            ELSE 'Miami Convention Center'
+         END,
+         FLOOR(50 + RAND() * 450));
+        SET i = i + 1;
+    END WHILE;
+
+    -- Generate Attendees
+    SET i = 1;
+    WHILE i <= 100 DO
+        INSERT INTO attendees (event_id, name, email, phone) VALUES
+        (FLOOR(1 + RAND() * 100),
+         CONCAT('Attendee ', i),
+         CONCAT('attendee', i, '@example.com'),
+         CONCAT('555-', LPAD(FLOOR(RAND() * 9999), 4, '0')));
+        SET i = i + 1;
+    END WHILE;
+END //
+DELIMITER ;
+
+-- Execute the procedure
+CALL generate_test_data();
+
+-- Clean up
+DROP PROCEDURE IF EXISTS generate_test_data; 
