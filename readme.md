@@ -214,19 +214,3 @@ event-management/
 - Protected sensitive routes
 - File access restrictions
 
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support, please open an issue in the repository or contact the maintainers.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
