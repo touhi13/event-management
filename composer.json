@@ -1,0 +1,16 @@
+{
+    "name": "your-name/event-management",
+    "description": "Event Management System",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/Core/",
+            "Controllers\\": "src/Controllers/",
+            "Models\\": "src/Models/",
+            "Middleware\\": "src/Middleware/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    }
+}
