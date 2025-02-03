@@ -63,6 +63,7 @@ $routes = [
         '/events/register'         => [
             'controller' => Controllers\AttendeeController::class,
             'action'     => 'register',
+            'middleware' => [Middleware\AuthMiddleware::class],
         ],
         '/events/attendees'        => [
             'controller' => Controllers\AttendeeController::class,
@@ -108,6 +109,7 @@ $routes = [
         '/events/register' => [
             'controller' => Controllers\AttendeeController::class,
             'action'     => 'register',
+            'middleware' => [Middleware\AuthMiddleware::class],
         ],
         '/events/store'    => [
             'controller' => Controllers\EventController::class,
